@@ -2,11 +2,16 @@
 
 namespace Gorse;
 
+use Gorse\Dto\Feedback;
+use Gorse\Dto\RowAffected;
+use Gorse\Dto\User;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 final readonly class Gorse
 {
-    function __construct(
+    public function __construct(
         private string $endpoint,
         private string $apiKey
     ) {
@@ -15,7 +20,7 @@ final readonly class Gorse
     /**
      * @throws GuzzleException
      */
-    function insertUser(User $user): RowAffected
+    public function insertUser(User $user): RowAffected
     {
         return RowAffected::fromJSON($this->request('POST', '/api/user/', $user));
     }
@@ -23,7 +28,7 @@ final readonly class Gorse
     /**
      * @throws GuzzleException
      */
-    function getUser(string $userId): User
+    public function getUser(string $userId): User
     {
         return User::fromJSON($this->request('GET', '/api/user/' . $userId));
     }
@@ -31,7 +36,7 @@ final readonly class Gorse
     /**
      * @throws GuzzleException
      */
-    function deleteUser(string $userId): RowAffected
+    public function deleteUser(string $userId): RowAffected
     {
         return RowAffected::fromJSON($this->request('DELETE', '/api/user/' . $userId));
     }
@@ -40,7 +45,7 @@ final readonly class Gorse
      * @param Feedback|Feedback[] $feedback
      * @throws GuzzleException
      */
-    function insertFeedback(mixed $feedback): RowAffected
+    public function insertFeedback(mixed $feedback): RowAffected
     {
         if ($feedback instanceof Feedback) {
             $feedback = [$feedback];
@@ -52,7 +57,7 @@ final readonly class Gorse
     /**
      * @throws GuzzleException
      */
-    function getRecommend(string $userId): array
+    public function getRecommend(string $userId): object
     {
         return $this->request('GET', '/api/recommend/' . $userId);
     }
@@ -60,15 +65,15 @@ final readonly class Gorse
     /**
      * @throws GuzzleException
      */
-    private function request(string $method, string $uri, \JsonSerializable|array|null $body = null)
+    private function request(string $method, string $uri, \JsonSerializable|array|null $body = null): object|null
     {
-        $client = new GuzzleHttp\Client(['base_uri' => $this->endpoint]);
-        $options = [GuzzleHttp\RequestOptions::HEADERS => ['X-API-Key' => $this->apiKey]];
+        $client = new Client(['base_uri' => $this->endpoint]);
+        $options = [RequestOptions::HEADERS => ['X-API-Key' => $this->apiKey]];
         if ($body != null) {
-            $options[GuzzleHttp\RequestOptions::JSON] = $body;
+            $options[RequestOptions::JSON] = $body;
         }
         $response = $client->request($method, $uri, $options);
 
-        return json_decode($response->getBody());
+        return json_decode($response->getBody()->getContents(), false);
     }
 }

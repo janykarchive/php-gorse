@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Gorse;
+namespace Gorse\Dto;
 
 readonly class User implements \JsonSerializable
 {
